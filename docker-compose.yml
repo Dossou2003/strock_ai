@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=stroke_db
+      - POSTGRES_USER=stroke_user
+      - POSTGRES_PASSWORD=stroke_pass
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend:/app
+      - backend_media:/app/media
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=votre_cle_secrete_ici
+      - DATABASE_URL=postgres://stroke_user:stroke_pass@db:5432/stroke_db
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - db
+    networks:
+      - app-network
+    expose:
+      - "8000"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  backend_media:
