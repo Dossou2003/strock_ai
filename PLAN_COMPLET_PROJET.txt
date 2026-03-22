@@ -1,0 +1,1061 @@
+================================================================================
+                    PLAN COMPLET - APPLICATION DÉTECTION AVC
+                    Stroke Detection AI Platform
+================================================================================
+
+📅 Date de création: 16 Décembre 2025
+🎯 Objectif: Application web complète pour la détection automatique d'AVC 
+             par analyse de scans CT cérébraux avec IA
+
+================================================================================
+                            TABLE DES MATIÈRES
+================================================================================
+
+1. ARCHITECTURE GÉNÉRALE
+2. STACK TECHNIQUE
+3. STRUCTURE DU PROJET
+4. BACKEND (Django REST Framework)
+5. FRONTEND (React.js)
+6. MODÈLES IA & FICHIERS NÉCESSAIRES
+7. FONCTIONNALITÉS DÉTAILLÉES
+8. PLAN DE DÉVELOPPEMENT (ÉTAPES)
+9. DÉPLOIEMENT
+10. CHECKLIST FINALE
+
+================================================================================
+                        1. ARCHITECTURE GÉNÉRALE
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                         │
+│  UTILISATEUR (Navigateur Web)                                          │
+│         │                                                               │
+│         ↓                                                               │
+│  ┌──────────────────────────────────────────────────────────────┐     │
+│  │  FRONTEND (React.js)                                         │     │
+│  │  - Interface d'upload                                        │     │
+│  │  - Visualisation 3D                                          │     │
+│  │  - Dashboard résultats                                       │     │
+│  │  - Chatbot Gemini                                            │     │
+│  │  Déployé sur: Vercel/Netlify                                │     │
+│  └──────────────────────────────────────────────────────────────┘     │
+│         │                                                               │
+│         ↓ (API REST)                                                   │
+│  ┌──────────────────────────────────────────────────────────────┐     │
+│  │  BACKEND (Django REST Framework)                             │     │
+│  │  - API REST                                                  │     │
+│  │  - Authentification JWT                                      │     │
+│  │  - Traitement d'images                                       │     │
+│  │  - Modèles IA (U-Net, GLCM, SVM)                            │     │
+│  │  - Intégration Gemini API                                    │     │
+│  │  Déployé sur: Render                                         │     │
+│  └──────────────────────────────────────────────────────────────┘     │
+│         │                                                               │
+│         ↓                                                               │
+│  ┌──────────────────────────────────────────────────────────────┐     │
+│  │  BASE DE DONNÉES (PostgreSQL)                                │     │
+│  │  - Utilisateurs                                              │     │
+│  │  - Analyses                                                  │     │
+│  │  - Résultats                                                 │     │
+│  │  - Historique                                                │     │
+│  │  URL fournie par l'utilisateur                               │     │
+│  └──────────────────────────────────────────────────────────────┘     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+================================================================================
+                            2. STACK TECHNIQUE
+================================================================================
+
+FRONTEND:
+---------
+✓ React.js 18+ (avec TypeScript)
+✓ Vite (build tool rapide)
+✓ Tailwind CSS (styling)
+✓ shadcn/ui (composants UI)
+✓ React Three Fiber (visualisation 3D)
+✓ Framer Motion (animations)
+✓ Recharts (graphiques)
+✓ Axios (requêtes HTTP)
+✓ React Router (navigation)
+✓ Zustand (state management)
+
+BACKEND:
+--------
+✓ Python 3.10+
+✓ Django 4.0+
+✓ Django REST Framework
+✓ djangorestframework-simplejwt (authentification)
+✓ django-cors-headers (CORS)
+✓ Pillow (traitement d'images)
+✓ TensorFlow/Keras (modèle U-Net)
+✓ scikit-image (GLCM)
+✓ scikit-learn (SVM)
+✓ google-generativeai (Gemini API)
+✓ psycopg2-binary (PostgreSQL)
+✓ python-dotenv (variables d'environnement)
+✓ whitenoise (fichiers statiques)
+
+BASE DE DONNÉES:
+----------------
+✓ PostgreSQL (URL fournie)
+
+DÉPLOIEMENT:
+------------
+✓ Frontend: render
+✓ Backend: Render
+✓ Stockage fichiers: Cloudinary ou AWS S3 (optionnel)
+
+================================================================================
+                        3. STRUCTURE DU PROJET
+================================================================================
+
+stroke-detection-app/
+│
+├── backend/                          # Django REST Framework
+│   ├── config/                       # Configuration Django
+│   │   ├── __init__.py
+│   │   ├── settings.py               # Settings principal
+│   │   ├── urls.py                   # URLs racine
+│   │   ├── wsgi.py
+│   │   └── asgi.py
+│   │
+│   ├── api/                          # Application principale API
+│   │   ├── __init__.py
+│   │   ├── models.py                 # Modèles DB
+│   │   ├── serializers.py            # Serializers DRF
+│   │   ├── views.py                  # Views API
+│   │   ├── urls.py                   # Routes API
+│   │   └── permissions.py            # Permissions
+│   │
+│   ├── ai_models/                    # Module IA
+│   │   ├── __init__.py
+│   │   ├── unet_model.py             # Chargement U-Net
+│   │   ├── glcm_analysis.py          # Analyse GLCM
+│   │   ├── svm_classifier.py         # Classification SVM
+│   │   └── pipeline.py               # Pipeline complet
+│   │
+│   ├── chatbot/                      # Module Chatbot Gemini
+│   │   ├── __init__.py
+│   │   ├── gemini_client.py          # Client Gemini API
+│   │   ├── prompts.py                # Prompts système
+│   │   └── views.py                  # Endpoints chatbot
+│   │
+│   ├── media/                        # Fichiers uploadés
+│   │   ├── uploads/                  # Images CT uploadées
+│   │   └── results/                  # Résultats générés
+│   │
+│   ├── models_saved/                 # Modèles IA sauvegardés
+│   │   ├── unet_territories.h5       # Modèle U-Net (à copier)
+│   │   ├── svm_classifier.pkl        # Modèle SVM (à générer)
+│   │   └── scaler.pkl                # Scaler features (à générer)
+│   │
+│   ├── requirements.txt              # Dépendances Python
+│   ├── manage.py                     # Django manage
+│   ├── .env                          # Variables d'environnement
+│   └── render.yaml                   # Config Render
+│
+├── frontend/                         # React.js
+│   ├── public/                       # Fichiers publics
+│   │   ├── index.html
+│   │   └── assets/                   # Images, icônes
+│   │
+│   ├── src/
+│   │   ├── components/               # Composants React
+│   │   │   ├── common/               # Composants réutilisables
+│   │   │   │   ├── Button.tsx
+│   │   │   │   ├── Card.tsx
+│   │   │   │   └── Loader.tsx
+│   │   │   │
+│   │   │   ├── layout/               # Layout
+│   │   │   │   ├── Navbar.tsx
+│   │   │   │   ├── Footer.tsx
+│   │   │   │   └── Sidebar.tsx
+│   │   │   │
+│   │   │   ├── analysis/             # Composants analyse
+│   │   │   │   ├── ImageUploader.tsx
+│   │   │   │   ├── ProgressBar.tsx
+│   │   │   │   └── ResultsDashboard.tsx
+│   │   │   │
+│   │   │   ├── visualization/        # Visualisations
+│   │   │   │   ├── Brain3D.tsx       # Modèle 3D cerveau
+│   │   │   │   ├── ComparisonSlider.tsx
+│   │   │   │   ├── Heatmap.tsx
+│   │   │   │   └── Charts.tsx
+│   │   │   │
+│   │   │   └── chatbot/              # Chatbot
+│   │   │       ├── ChatWindow.tsx
+│   │   │       ├── Message.tsx
+│   │   │       └── InputBox.tsx
+│   │   │
+│   │   ├── pages/                    # Pages
+│   │   │   ├── Home.tsx              # Landing page
+│   │   │   ├── Analysis.tsx          # Page analyse
+│   │   │   ├── Results.tsx           # Page résultats
+│   │   │   ├── History.tsx           # Historique
+│   │   │   ├── Resources.tsx         # Ressources éducatives
+│   │   │   ├── Professional.tsx      # Espace pro
+│   │   │   └── NotFound.tsx
+│   │   │
+│   │   ├── services/                 # Services API
+│   │   │   ├── api.ts                # Client Axios
+│   │   │   ├── analysisService.ts    # API analyse
+│   │   │   ├── chatbotService.ts     # API chatbot
+│   │   │   └── authService.ts        # API auth
+│   │   │
+│   │   ├── store/                    # State management
+│   │   │   ├── useAuthStore.ts
+│   │   │   ├── useAnalysisStore.ts
+│   │   │   └── useChatStore.ts
+│   │   │
+│   │   ├── types/                    # TypeScript types
+│   │   │   ├── analysis.ts
+│   │   │   ├── user.ts
+│   │   │   └── chatbot.ts
+│   │   │
+│   │   ├── utils/                    # Utilitaires
+│   │   │   ├── formatters.ts
+│   │   │   └── validators.ts
+│   │   │
+│   │   ├── App.tsx                   # Composant racine
+│   │   ├── main.tsx                  # Point d'entrée
+│   │   └── index.css                 # Styles globaux
+│   │
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   └── .env                          # Variables d'environnement
+│
+├── docs/                             # Documentation
+│   ├── API.md                        # Documentation API
+│   ├── DEPLOYMENT.md                 # Guide déploiement
+│   └── USER_GUIDE.md                 # Guide utilisateur
+│
+├── PLAN_COMPLET_PROJET.txt           # CE FICHIER
+└── README.md                         # README principal
+
+================================================================================
+                    4. BACKEND (Django REST Framework)
+================================================================================
+
+4.1 MODÈLES DE BASE DE DONNÉES
+-------------------------------
+
+1. User (utilisateur Django par défaut + extensions)
+   - email (unique)
+   - first_name
+   - last_name
+   - role (patient, doctor, admin)
+   - created_at
+   - updated_at
+
+2. Analysis (analyse d'image)
+   - id (UUID)
+   - user (ForeignKey)
+   - ct_image (ImageField)
+   - status (pending, processing, completed, failed)
+   - created_at
+   - updated_at
+   - processing_time (seconds)
+
+3. Result (résultat d'analyse)
+   - id (UUID)
+   - analysis (OneToOne)
+   - has_stroke (Boolean)
+   - probability (Float 0-1)
+   - affected_territory (CharField: ACM_G, ACM_D, ACA, ACP)
+   - segmentation_image (ImageField)
+   - heatmap_image (ImageField)
+   - glcm_features (JSONField)
+   - created_at
+
+4. ChatMessage (historique chatbot)
+   - id
+   - user (ForeignKey)
+   - analysis (ForeignKey, nullable)
+   - message (TextField)
+   - response (TextField)
+   - timestamp
+
+5. MedicalHistory (historique patient)
+   - id
+   - user (ForeignKey)
+   - analyses (ManyToMany → Analysis)
+   - notes (TextField)
+
+4.2 ENDPOINTS API
+-----------------
+
+AUTHENTIFICATION:
+POST   /api/auth/register/          # Inscription
+POST   /api/auth/login/             # Connexion (JWT)
+POST   /api/auth/refresh/           # Refresh token
+POST   /api/auth/logout/            # Déconnexion
+GET    /api/auth/me/                # Profil utilisateur
+
+ANALYSE:
+POST   /api/analysis/upload/        # Upload image CT
+GET    /api/analysis/{id}/          # Détails analyse
+GET    /api/analysis/list/          # Liste analyses utilisateur
+DELETE /api/analysis/{id}/          # Supprimer analyse
+GET    /api/analysis/{id}/status/   # Statut traitement
+
+RÉSULTATS:
+GET    /api/results/{analysis_id}/  # Résultats complets
+GET    /api/results/{id}/pdf/       # Export PDF
+GET    /api/results/{id}/images/    # Images générées
+
+CHATBOT:
+POST   /api/chatbot/message/        # Envoyer message
+GET    /api/chatbot/history/        # Historique conversation
+DELETE /api/chatbot/clear/          # Effacer historique
+
+STATISTIQUES (Admin/Doctor):
+GET    /api/stats/overview/         # Vue d'ensemble
+GET    /api/stats/performance/      # Métriques modèle
+
+4.3 PIPELINE IA (ai_models/pipeline.py)
+----------------------------------------
+
+def analyze_ct_scan(image_path):
+    """
+    Pipeline complet d'analyse
+    
+    Étapes:
+    1. Prétraitement image
+    2. Segmentation U-Net (territoires vasculaires)
+    3. Extraction ROI ACM_G et ACM_D
+    4. Calcul features GLCM
+    5. Calcul vecteur d'asymétrie
+    6. Classification SVM
+    7. Génération visualisations
+    8. Retour résultats
+    
+    Returns:
+        {
+            'has_stroke': bool,
+            'probability': float,
+            'affected_territory': str,
+            'glcm_features': dict,
+            'segmentation_mask': np.array,
+            'processing_time': float
+        }
+    """
+
+4.4 INTÉGRATION GEMINI
+----------------------
+
+Fichier: chatbot/gemini_client.py
+
+import google.generativeai as genai
+
+class GeminiChatbot:
+    def __init__(self):
+        genai.configure(api_key=settings.GEMINI_API_KEY)
+        self.model = genai.GenerativeModel('gemini-pro')
+        
+    def get_response(self, user_message, context=None):
+        """
+        Génère une réponse avec contexte médical
+        
+        Args:
+            user_message: Question utilisateur
+            context: Contexte (résultats analyse, etc.)
+        """
+        system_prompt = """
+        Tu es un assistant médical spécialisé en AVC.
+        Tu expliques les résultats d'analyse de façon claire et rassurante.
+        Tu ne poses pas de diagnostic mais tu éduques.
+        """
+        
+        full_prompt = f"{system_prompt}\n\nContexte: {context}\n\nQuestion: {user_message}"
+        response = self.model.generate_content(full_prompt)
+        return response.text
+
+================================================================================
+                        5. FRONTEND (React.js)
+================================================================================
+
+5.1 PAGES PRINCIPALES
+---------------------
+
+1. HOME (Landing Page)
+   - Hero section avec animation 3D cerveau
+   - Statistiques en temps réel
+   - CTA "Analyser un scan"
+   - Section "Comment ça marche"
+   - Témoignages
+   - Footer
+
+2. ANALYSIS (Page d'analyse)
+   - Zone d'upload (drag & drop)
+   - Barre de progression
+   - Affichage statut en temps réel
+
+3. RESULTS (Dashboard résultats)
+   Layout 3 colonnes:
+   - Colonne 1: Diagnostic principal
+   - Colonne 2: Visualisation 3D interactive
+   - Colonne 3: Détails techniques
+   
+   Sections:
+   - Résumé diagnostic
+   - Modèle 3D rotatif du cerveau
+   - Comparaison gauche/droite (slider)
+   - Heatmap d'asymétrie
+   - Graphiques features GLCM
+   - Timeline de traitement
+   - Boutons: PDF, Partager, Chatbot
+
+4. HISTORY (Historique)
+   - Liste des analyses passées
+   - Filtres (date, résultat)
+   - Comparaison temporelle
+
+5. RESOURCES (Ressources éducatives)
+   - Articles sur l'AVC
+   - Méthodologie IA
+   - FAQ
+   - Vidéos explicatives
+
+6. PROFESSIONAL (Espace médecin)
+   - Dashboard statistiques
+   - Gestion patients
+   - Export données
+
+5.2 COMPOSANTS CLÉS
+-------------------
+
+Brain3D.tsx (Visualisation 3D):
+```typescript
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
+
+export function Brain3D({ territories, strokeZone }) {
+  return (
+    <Canvas>
+      <ambientLight intensity={0.5} />
+      <BrainMesh 
+        territories={territories}
+        highlightZone={strokeZone}
+      />
+      <OrbitControls />
+    </Canvas>
+  )
+}
+```
+
+ChatWindow.tsx (Chatbot):
+```typescript
+export function ChatWindow({ analysisContext }) {
+  const [messages, setMessages] = useState([])
+  
+  const sendMessage = async (text) => {
+    const response = await chatbotService.send({
+      message: text,
+      context: analysisContext
+    })
+    setMessages([...messages, { user: text, bot: response }])
+  }
+  
+  return (
+    <div className="chat-container">
+      <MessageList messages={messages} />
+      <InputBox onSend={sendMessage} />
+    </div>
+  )
+}
+```
+
+5.3 SERVICES API
+----------------
+
+analysisService.ts:
+```typescript
+export const analysisService = {
+  upload: async (file: File) => {
+    const formData = new FormData()
+    formData.append('ct_image', file)
+    return api.post('/analysis/upload/', formData)
+  },
+  
+  getStatus: async (id: string) => {
+    return api.get(`/analysis/${id}/status/`)
+  },
+  
+  getResults: async (id: string) => {
+    return api.get(`/results/${id}/`)
+  }
+}
+```
+
+================================================================================
+                    6. MODÈLES IA & FICHIERS NÉCESSAIRES
+================================================================================
+
+FICHIERS À COPIER/GÉNÉRER:
+---------------------------
+
+1. unet_territories.h5
+   Source: /home/Armel/Mémoire/unet_territories.h5
+   Destination: backend/models_saved/unet_territories.h5
+   Description: Modèle U-Net entraîné pour segmentation territoires
+
+2. svm_classifier.pkl (À GÉNÉRER)
+   Source: Notebook Colab (après entraînement SVM)
+   Destination: backend/models_saved/svm_classifier.pkl
+   Code pour sauvegarder:
+   ```python
+   import joblib
+   joblib.dump(svm_model, 'svm_classifier.pkl')
+   ```
+
+3. scaler.pkl (À GÉNÉRER)
+   Source: Notebook Colab (StandardScaler)
+   Destination: backend/models_saved/scaler.pkl
+   Code:
+   ```python
+   joblib.dump(scaler, 'scaler.pkl')
+   ```
+
+4. class_labels.json (À CRÉER)
+   Destination: backend/models_saved/class_labels.json
+   Contenu:
+   ```json
+   {
+     "0": "background",
+     "1": "ACA",
+     "2": "ACM_d",
+     "3": "ACM_g",
+     "4": "ACP"
+   }
+   ```
+
+INTÉGRATION DANS LE CODE:
+--------------------------
+
+backend/ai_models/unet_model.py:
+```python
+from tensorflow.keras.models import load_model
+import os
+
+class UNetSegmenter:
+    def __init__(self):
+        model_path = os.path.join(settings.BASE_DIR, 'models_saved', 'unet_territories.h5')
+        self.model = load_model(model_path)
+    
+    def predict(self, image):
+        # Prétraitement
+        img_resized = cv2.resize(image, (256, 256)) / 255.0
+        img_input = img_resized[None, ..., None]
+        
+        # Prédiction
+        pred = self.model.predict(img_input)[0]
+        pred_mask = np.argmax(pred, axis=-1)
+        
+        return pred_mask
+```
+
+backend/ai_models/svm_classifier.py:
+```python
+import joblib
+
+class StrokeClassifier:
+    def __init__(self):
+        self.model = joblib.load('models_saved/svm_classifier.pkl')
+        self.scaler = joblib.load('models_saved/scaler.pkl')
+    
+    def predict(self, features_vector):
+        # Normalisation
+        features_scaled = self.scaler.transform([features_vector])
+        
+        # Prédiction
+        prediction = self.model.predict(features_scaled)[0]
+        probability = self.model.predict_proba(features_scaled)[0][1]
+        
+        return {
+            'has_stroke': bool(prediction),
+            'probability': float(probability)
+        }
+```
+
+================================================================================
+                    7. FONCTIONNALITÉS DÉTAILLÉES
+================================================================================
+
+7.1 UPLOAD & ANALYSE
+--------------------
+✓ Drag & drop d'image CT (PNG, JPG, DICOM)
+✓ Validation format et taille
+✓ Prévisualisation avant upload
+✓ Barre de progression upload
+✓ Traitement asynchrone (polling status)
+✓ Notification fin de traitement
+
+7.2 VISUALISATION RÉSULTATS
+----------------------------
+✓ Diagnostic principal (AVC oui/non + probabilité)
+✓ Territoire affecté identifié
+✓ Modèle 3D interactif du cerveau
+  - Rotation 360°
+  - Zoom
+  - Territoires colorés
+  - Zone AVC en rouge pulsant
+✓ Slider comparaison gauche/droite
+✓ Heatmap d'asymétrie superposée
+✓ Graphiques features GLCM (barres, radar)
+✓ Timeline de traitement
+✓ Images de segmentation téléchargeables
+
+7.3 CHATBOT GEMINI
+------------------
+✓ Interface chat moderne
+✓ Contexte automatique (résultats analyse)
+✓ Réponses en temps réel
+✓ Historique conversation
+✓ Suggestions de questions
+✓ Mode "Expliquer simplement"
+✓ Redirection urgences si nécessaire
+
+Exemples de questions:
+- "C'est quoi un effacement des sillons ?"
+- "Que signifie ma probabilité de 87% ?"
+- "Quels sont les symptômes d'un AVC ?"
+- "Que dois-je faire maintenant ?"
+
+7.4 EXPORT & PARTAGE
+--------------------
+✓ Export PDF professionnel
+  - Logo
+  - Informations patient
+  - Diagnostic
+  - Images annotées
+  - Recommandations
+✓ Partage par email (médecin)
+✓ Téléchargement images haute résolution
+✓ Export données JSON (pour PACS)
+
+7.5 HISTORIQUE & SUIVI
+----------------------
+✓ Liste toutes les analyses
+✓ Filtres: date, résultat, territoire
+✓ Comparaison temporelle (évolution)
+✓ Graphiques de progression
+✓ Notes personnelles
+
+7.6 ESPACE PROFESSIONNEL
+-------------------------
+✓ Dashboard médecin
+✓ Liste patients
+✓ Statistiques globales
+✓ Métriques de performance IA
+✓ Export données agrégées
+
+7.7 RESSOURCES ÉDUCATIVES
+--------------------------
+✓ Articles sur l'AVC
+✓ Méthodologie (U-Net, GLCM, SVM)
+✓ FAQ complète
+✓ Vidéos explicatives
+✓ Glossaire médical
+✓ Références scientifiques
+
+================================================================================
+                    8. PLAN DE DÉVELOPPEMENT (ÉTAPES)
+================================================================================
+
+PHASE 1: SETUP & INFRASTRUCTURE (Jours 1-2)
+--------------------------------------------
+□ Créer structure dossiers backend/frontend
+□ Initialiser projet Django
+□ Initialiser projet React + Vite
+□ Configurer PostgreSQL (URL fournie)
+□ Configurer variables d'environnement (.env)
+□ Installer dépendances (requirements.txt, package.json)
+□ Tester connexion DB
+□ Setup Git + .gitignore
+
+PHASE 2: BACKEND - MODÈLES & API BASE (Jours 3-5)
+--------------------------------------------------
+□ Créer modèles Django (User, Analysis, Result, etc.)
+□ Migrations DB
+□ Configurer Django REST Framework
+□ Implémenter authentification JWT
+□ Créer serializers
+□ Endpoints auth (register, login, me)
+□ Endpoints analysis (upload, list, detail)
+□ Tester API avec Postman/Thunder Client
+
+PHASE 3: INTÉGRATION IA (Jours 6-8)
+------------------------------------
+□ Copier modèle U-Net dans models_saved/
+□ Générer et copier SVM + scaler
+□ Créer module ai_models/
+□ Implémenter pipeline.py complet
+□ Implémenter unet_model.py
+□ Implémenter glcm_analysis.py
+□ Implémenter svm_classifier.py
+□ Tester pipeline sur images locales
+□ Intégrer pipeline dans views.py
+□ Endpoint /api/analysis/upload/ fonctionnel
+
+PHASE 4: CHATBOT GEMINI (Jours 9-10)
+-------------------------------------
+□ Obtenir clé API Gemini (gratuite)
+□ Créer module chatbot/
+□ Implémenter gemini_client.py
+□ Créer prompts système
+□ Endpoints chatbot
+□ Tester conversations
+
+PHASE 5: FRONTEND - STRUCTURE (Jours 11-13)
+--------------------------------------------
+□ Setup React + TypeScript + Vite
+□ Configurer Tailwind CSS
+□ Installer shadcn/ui
+□ Créer structure composants
+□ Créer pages (Home, Analysis, Results, etc.)
+□ Setup React Router
+□ Créer services API (axios)
+□ Setup Zustand (state)
+
+PHASE 6: FRONTEND - PAGES PRINCIPALES (Jours 14-17)
+----------------------------------------------------
+□ Page Home (landing)
+  - Hero section
+  - Animations
+  - CTA
+□ Page Analysis
+  - Upload component
+  - Drag & drop
+  - Progress bar
+□ Page Results
+  - Layout 3 colonnes
+  - Diagnostic card
+  - Détails techniques
+□ Intégration API backend
+
+PHASE 7: VISUALISATIONS AVANCÉES (Jours 18-20)
+-----------------------------------------------
+□ Installer React Three Fiber
+□ Créer composant Brain3D
+□ Modèle 3D cerveau
+□ Coloration territoires
+□ Highlight zone AVC
+□ Slider comparaison G/D
+□ Heatmap overlay
+□ Graphiques Recharts (features GLCM)
+
+PHASE 8: CHATBOT FRONTEND (Jours 21-22)
+----------------------------------------
+□ Composant ChatWindow
+□ Interface messages
+□ Intégration API Gemini
+□ Historique conversation
+□ Suggestions questions
+□ Modal/Sidebar chat
+
+PHASE 9: FONCTIONNALITÉS AVANCÉES (Jours 23-25)
+------------------------------------------------
+□ Export PDF (backend + frontend)
+□ Historique analyses
+□ Filtres et recherche
+□ Espace professionnel
+□ Ressources éducatives
+□ Page FAQ
+
+PHASE 10: DESIGN & UX (Jours 26-27)
+------------------------------------
+□ Responsive design (mobile/tablet)
+□ Animations Framer Motion
+□ Loading states
+□ Error handling
+□ Notifications toast
+□ Dark mode (optionnel)
+
+PHASE 11: TESTS & DEBUG (Jours 28-29)
+--------------------------------------
+□ Tests unitaires backend
+□ Tests API (Postman collection)
+□ Tests frontend (composants)
+□ Tests end-to-end
+□ Correction bugs
+□ Optimisation performances
+
+PHASE 12: DÉPLOIEMENT (Jour 30)
+--------------------------------
+□ Préparer backend pour Render
+  - render.yaml
+  - requirements.txt
+  - Collectstatic
+  - Migrations
+□ Déployer backend sur Render
+□ Tester API en production
+□ Préparer frontend pour Vercel
+  - Variables d'environnement
+  - Build production
+□ Déployer frontend sur Vercel
+□ Configurer CORS
+□ Tests complets en production
+□ Documentation finale
+
+================================================================================
+                            9. DÉPLOIEMENT
+================================================================================
+
+9.1 BACKEND (Render)
+--------------------
+
+Fichier: backend/render.yaml
+```yaml
+services:
+  - type: web
+    name: stroke-detection-api
+    env: python
+    buildCommand: |
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: gunicorn config.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: DATABASE_URL
+        value: [URL PostgreSQL fournie]
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: GEMINI_API_KEY
+        sync: false
+```
+
+Étapes:
+1. Créer compte Render
+2. Connecter repo GitHub
+3. Créer Web Service
+4. Configurer variables d'environnement
+5. Déployer
+
+9.2 FRONTEND (Vercel)
+---------------------
+
+Fichier: frontend/.env.production
+```
+VITE_API_URL=https://stroke-detection-api.onrender.com
+```
+
+Étapes:
+1. Créer compte Vercel
+2. Importer projet GitHub
+3. Configurer build:
+   - Framework: Vite
+   - Build command: npm run build
+   - Output directory: dist
+4. Ajouter variables d'environnement
+5. Déployer
+
+9.3 BASE DE DONNÉES
+-------------------
+✓ URL PostgreSQL fournie par l'utilisateur
+✓ Configurer dans backend/.env
+✓ Tester connexion locale
+✓ Migrations en production
+
+================================================================================
+                        10. CHECKLIST FINALE
+================================================================================
+
+BACKEND:
+--------
+□ Tous les modèles créés et migrés
+□ Tous les endpoints API fonctionnels
+□ Authentification JWT opérationnelle
+□ Pipeline IA intégré et testé
+□ Chatbot Gemini fonctionnel
+□ CORS configuré
+□ Variables d'environnement sécurisées
+□ Fichiers statiques servis
+□ Tests unitaires passent
+□ Documentation API complète
+
+FRONTEND:
+---------
+□ Toutes les pages créées
+□ Navigation fluide
+□ Upload d'images fonctionnel
+□ Affichage résultats complet
+□ Visualisation 3D opérationnelle
+□ Chatbot intégré
+□ Responsive design
+□ Animations fluides
+□ Gestion erreurs
+□ Loading states
+□ Export PDF fonctionnel
+
+DÉPLOIEMENT:
+------------
+□ Backend déployé sur Render
+□ Frontend déployé sur Vercel
+□ Base de données connectée
+□ API accessible depuis frontend
+□ HTTPS activé
+□ Tests en production OK
+□ Monitoring configuré
+
+DOCUMENTATION:
+--------------
+□ README.md complet
+□ Documentation API
+□ Guide déploiement
+□ Guide utilisateur
+□ Commentaires code
+
+SÉCURITÉ:
+---------
+□ Secrets non commitées
+□ HTTPS partout
+□ Validation inputs
+□ Rate limiting API
+□ Authentification sécurisée
+□ CORS restreint
+
+================================================================================
+                            VARIABLES D'ENVIRONNEMENT
+================================================================================
+
+BACKEND (.env):
+---------------
+SECRET_KEY=<généré automatiquement>
+DEBUG=False
+DATABASE_URL=<URL PostgreSQL fournie>
+ALLOWED_HOSTS=stroke-detection-api.onrender.com,localhost
+CORS_ALLOWED_ORIGINS=https://stroke-detection.vercel.app,http://localhost:5173
+
+# Gemini API
+GEMINI_API_KEY=<clé API Gemini gratuite>
+
+# Stockage (optionnel)
+CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+FRONTEND (.env):
+----------------
+VITE_API_URL=https://stroke-detection-api.onrender.com
+VITE_APP_NAME=Stroke Detection AI
+VITE_ENABLE_ANALYTICS=false
+
+================================================================================
+                            DÉPENDANCES
+================================================================================
+
+BACKEND (requirements.txt):
+----------------------------
+Django==5.0.1
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.3.1
+psycopg2-binary==2.9.9
+python-dotenv==1.0.0
+Pillow==10.2.0
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# IA
+tensorflow==2.15.0
+scikit-image==0.22.0
+scikit-learn==1.4.0
+opencv-python-headless==4.9.0.80
+numpy==1.26.3
+
+# Gemini
+google-generativeai==0.3.2
+
+# Utils
+python-dateutil==2.8.2
+reportlab==4.0.9  # Pour PDF
+
+FRONTEND (package.json):
+------------------------
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.21.0",
+    "axios": "^1.6.5",
+    "zustand": "^4.4.7",
+    "@react-three/fiber": "^8.15.12",
+    "@react-three/drei": "^9.92.7",
+    "three": "^0.160.0",
+    "framer-motion": "^10.18.0",
+    "recharts": "^2.10.3",
+    "tailwindcss": "^3.4.1",
+    "lucide-react": "^0.303.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.47",
+    "@types/react-dom": "^18.2.18",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11"
+  }
+}
+
+================================================================================
+                            NOTES IMPORTANTES
+================================================================================
+
+1. MODÈLES IA:
+   - Copier unet_territories.h5 depuis le notebook
+   - Générer svm_classifier.pkl après entraînement SVM
+   - Générer scaler.pkl (StandardScaler)
+   - Tester localement avant déploiement
+
+2. GEMINI API:
+   - Obtenir clé gratuite sur https://makersuite.google.com/app/apikey
+   - Limite: 60 requêtes/minute (suffisant pour démo)
+   - Configurer prompts système pour contexte médical
+
+3. POSTGRESQL:
+   - URL fournie par l'utilisateur
+   - Format: postgresql://user:password@host:port/database
+   - Tester connexion avant développement
+
+4. PERFORMANCE:
+   - Traitement image peut prendre 5-10 secondes
+   - Implémenter polling côté frontend
+   - Ajouter cache si nécessaire
+
+5. SÉCURITÉ:
+   - Ne JAMAIS commiter les .env
+   - Valider tous les inputs
+   - Limiter taille uploads (max 10MB)
+   - Rate limiting API
+
+6. RESPONSIVE:
+   - Mobile-first design
+   - Tester sur différents devices
+   - Optimiser images 3D pour mobile
+
+================================================================================
+                            CONTACT & SUPPORT
+================================================================================
+
+Développeur: Armel DAHOUI
+Projet: Mémoire - Détection AVC par IA
+Date: Décembre 2025
+
+Pour toute question:
+- Consulter la documentation dans /docs
+- Vérifier les logs Render/Vercel
+- Tester API avec Postman
+
+================================================================================
+                            FIN DU PLAN
+================================================================================
+
+Ce plan doit être suivi À LA LETTRE.
+Chaque étape doit être validée avant de passer à la suivante.
+Bon développement ! 🚀

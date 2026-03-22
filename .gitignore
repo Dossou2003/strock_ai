@@ -1,0 +1,75 @@
+# ========================
+# Python / Django
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+
+# Virtual environments
+venv/
+venv_backup/
+env/
+.env
+*.env
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+*.log
+media/uploads/
+media/results/
+
+# ========================
+# Node.js / React
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp
+.pnp.js
+
+# Build
+frontend/dist/
+frontend/build/
+
+# ========================
+# ML Models (trop volumineux pour GitHub)
+# ========================
+*.h5
+*.h5.bak
+*.h5.bak2
+*.pkl
+*.joblib
+*.pb
+*.tflite
+*.onnx
+
+# ========================
+# IDE / Editeur
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ========================
+# Divers
+# ========================
+*.ipynb_checkpoints/
+.ipynb_checkpoints/
+*.pyc
+.cache/
+.pytest_cache/
+htmlcov/
+.coverage
+*.bak
