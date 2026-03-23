@@ -75,6 +75,49 @@ export interface PaginatedResponse<T> {
 
 class AnalysisService {
   /**
+   * Nettoie une URL absolue pour la rendre relative au proxy Nginx.
+   */
+  private cleanUrl(url?: string): string | undefined {
+    if (!url) return undefined;
+    if (url.startsWith('http')) {
+      try {
+        const urlObj = new URL(url);
+        // Si c'est le port 8000 (backend Django), on garde que le chemin
+        if (urlObj.port === '8000' || urlObj.hostname === 'localhost' || urlObj.hostname === '127.0.0.1') {
+          return urlObj.pathname;
+        }
+      } catch (e) {
+        // Ignorer les erreurs d'URL invalide
+      }
+    }
+    return url;
+  }
+
+  /**
+   * Applique le nettoyage sur un objet Result.
+   */
+  private cleanResultUrls(result?: Result): Result | undefined {
+    if (!result) return undefined;
+    return {
+      ...result,
+      segmentation_image: this.cleanUrl(result.segmentation_image),
+      heatmap_image: this.cleanUrl(result.heatmap_image),
+      comparison_image: this.cleanUrl(result.comparison_image),
+    };
+  }
+
+  /**
+   * Applique le nettoyage sur un objet Analysis.
+   */
+  private cleanAnalysisUrls(analysis: Analysis): Analysis {
+    return {
+      ...analysis,
+      ct_image: this.cleanUrl(analysis.ct_image) as string,
+      result: this.cleanResultUrls(analysis.result),
+    };
+  }
+
+  /**
    * Upload une nouvelle image CT pour analyse.
    */
   async uploadImage(file: File): Promise<Analysis> {
@@ -87,7 +130,7 @@ class AnalysisService {
       },
     });
 
-    return response.data;
+    return this.cleanAnalysisUrls(response.data);
   }
 
   /**
@@ -97,7 +140,13 @@ class AnalysisService {
     const response = await api.get<PaginatedResponse<AnalysisListItem>>('/analysis/', {
       params: { page, page_size: pageSize },
     });
-    return response.data;
+    return {
+      ...response.data,
+      results: response.data.results.map(item => ({
+        ...item,
+        ct_image: this.cleanUrl(item.ct_image) as string
+      }))
+    };
   }
 
   /**
@@ -107,7 +156,10 @@ class AnalysisService {
     const response = await api.get<PaginatedResponse<AnalysisListItem>>('/analysis/', {
       params: { page_size: 100 },
     });
-    return response.data.results;
+    return response.data.results.map(item => ({
+      ...item,
+      ct_image: this.cleanUrl(item.ct_image) as string
+    }));
   }
 
   /**
@@ -115,7 +167,7 @@ class AnalysisService {
    */
   async getAnalysis(id: string): Promise<Analysis> {
     const response = await api.get<Analysis>(`/analysis/${id}/`);
-    return response.data;
+    return this.cleanAnalysisUrls(response.data);
   }
 
   /**
@@ -143,7 +195,7 @@ class AnalysisService {
    */
   async getResult(analysisId: string): Promise<Result> {
     const response = await api.get<Result>(`/results/analysis/${analysisId}/`);
-    return response.data;
+    return this.cleanResultUrls(response.data) as Result;
   }
 
   /**

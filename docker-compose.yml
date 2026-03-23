@@ -1,17 +1,5 @@
 version: '3.8'
-
 services:
-  db:
-    image: postgres:15-alpine
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    environment:
-      - POSTGRES_DB=stroke_db
-      - POSTGRES_USER=stroke_user
-      - POSTGRES_PASSWORD=stroke_pass
-    networks:
-      - app-network
-
   backend:
     build: ./backend
     volumes:
@@ -20,11 +8,10 @@ services:
     environment:
       - DEBUG=False
       - SECRET_KEY=votre_cle_secrete_ici
-      - DATABASE_URL=postgres://stroke_user:stroke_pass@db:5432/stroke_db
-      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - DATABASE_URL=postgresql://stroke_avc_yqld_user:b974vpUxY5BnWikVeSVVuexwilkXabUCR@dpg-d6vj1evdiees73d43fvg-a.oregon-postgres.render.com/stroke_avc_yqld
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-localhost,127.0.0.1,54.88.20.85}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173,http://54.88.20.85:8080}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-    depends_on:
-      - db
     networks:
       - app-network
     expose:
@@ -33,7 +20,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
     networks:
@@ -44,5 +31,4 @@ networks:
     driver: bridge
 
 volumes:
-  postgres_data:
   backend_media:
