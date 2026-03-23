@@ -2,8 +2,8 @@
 FROM python:3.10-slim
 
 # Éviter les fichiers .pyc et activer le buffering pour les logs
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Définir le répertoire de travail
 WORKDIR /app
@@ -11,7 +11,7 @@ WORKDIR /app
 # Installer les dépendances système pour OpenCV et d'autres bibliothèques
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
