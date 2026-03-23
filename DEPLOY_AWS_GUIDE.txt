@@ -1,0 +1,100 @@
+================================================================================
+GUIDE ÉTAPE PAR ÉTAPE : DÉPLOIEMENT STROKE AI SUR AWS EC2
+================================================================================
+
+Ce guide vous accompagne pour déployer l'intégralité de l'application (Frontend, 
+Backend, Base de données) sur une instance AWS EC2 en utilisant Docker.
+
+--------------------------------------------------------------------------------
+PRÉREQUIS
+--------------------------------------------------------------------------------
+- Un compte AWS.
+- Une paire de clés SSH (.pem) pour accéder à votre instance.
+- Les fichiers modèles (unet_territories.h5, etc.) sur votre machine locale.
+
+--------------------------------------------------------------------------------
+ÉTAPE 1 : CRÉATION DE L'INSTANCE EC2
+--------------------------------------------------------------------------------
+1. Connectez-vous à la console AWS > EC2 > Instances > Launch instances.
+2. Nom : "Stroke-AI-Server".
+3. AMI : Choisissez "Ubuntu Server 22.04 LTS" (gratuit et stable).
+4. Type d'instance : t3.medium recommandé (4 Go RAM minimum pour TensorFlow).
+5. Key pair : Sélectionnez votre clé SSH.
+6. Cliquez sur "Launch instance".
+
+--------------------------------------------------------------------------------
+ÉTAPE 2 : CONFIGURATION DE LA SÉCURITÉ (PARE-FEU)
+--------------------------------------------------------------------------------
+1. Dans la console EC2 > Security Groups.
+2. Sélectionnez le groupe lié à votre instance > Edit inbound rules.
+3. Ajoutez les règles suivantes :
+   - HTTP  | Port 80   | Source: 0.0.0.0/0  (Accès Web)
+   - Custom| Port 8000 | Source: 0.0.0.0/0  (Accès API Backend)
+   - SSH   | Port 22   | Source: My IP      (Pour vous connecter)
+4. Enregistrez les modifications.
+
+--------------------------------------------------------------------------------
+ÉTAPE 3 : INSTALLATION DE DOCKER SUR LE SERVEUR
+--------------------------------------------------------------------------------
+1. Connectez-vous en SSH à votre serveur :
+   ssh -i "votre-cle.pem" ubuntu@votre-ip-aws
+
+2. Exécutez ces commandes pour installer Docker :
+   sudo apt update
+   sudo apt install -y docker.io docker-compose
+   sudo systemctl start docker
+   sudo systemctl enable docker
+   sudo usermod -aG docker $USER
+   
+3. Déconnectez-vous et reconnectez-vous pour appliquer les droits Docker.
+
+--------------------------------------------------------------------------------
+ÉTAPE 4 : DÉPLOIEMENT DU CODE
+--------------------------------------------------------------------------------
+1. Clonez votre dépôt GitHub :
+   git clone https://github.com/Dossou2003/strock_ai.git
+   cd strock_ai
+
+--------------------------------------------------------------------------------
+ÉTAPE 5 : TRANSFERT DES MODÈLES D'INTELLIGENCE ARTIFICIELLE
+--------------------------------------------------------------------------------
+IMPORTANT : Comme les fichiers .h5 et .pkl sont ignorés par Git (trop lourds), 
+vous devez les envoyer par SCP depuis votre machine locale vers le serveur.
+
+DEPUIS VOTRE MACHINE LOCALE (Ouvrez un nouveau terminal) :
+   scp -i "votre-cle.pem" backend/models_saved/*.h5 ubuntu@votre-ip-aws:~/strock_ai/backend/models_saved/
+   scp -i "votre-cle.pem" backend/models_saved/*.pkl ubuntu@votre-ip-aws:~/strock_ai/backend/models_saved/
+
+--------------------------------------------------------------------------------
+ÉTAPE 6 : CONFIGURATION DE L'ENVIRONNEMENT
+--------------------------------------------------------------------------------
+1. Créez le fichier .env sur le serveur :
+   cp .env.docker.example .env
+   nano .env
+
+2. Modifiez les valeurs suivantes :
+   - ALLOWED_HOSTS=localhost,127.0.0.1,VOTRE_IP_AWS
+   - GEMINI_API_KEY=votre_cle_gemini_reelle
+   - VITE_API_URL=http://VOTRE_IP_AWS:80/api (Attention: port 80 via Nginx)
+
+--------------------------------------------------------------------------------
+ÉTAPE 7 : LANCEMENT DE L'APPLICATION
+--------------------------------------------------------------------------------
+1. Construisez et lancez les conteneurs :
+   docker-compose up --build -d
+
+2. Vérifiez que tout tourne :
+   docker-compose ps
+   docker-compose logs -f backend (pour voir si Django démarre bien)
+
+--------------------------------------------------------------------------------
+ÉTAPE 8 : UTILISATION
+--------------------------------------------------------------------------------
+L'application est maintenant disponible sur : http://VOTRE_IP_AWS
+
+Note : La base de données PostgreSQL sera automatiquement créée et gérée 
+dans un volume Docker persistant.
+
+================================================================================
+FIN DU GUIDE
+================================================================================
