@@ -58,25 +58,33 @@ export default function Register() {
       
       if (err.response?.data) {
         const data = err.response.data;
-        // Gérer les erreurs de validation DRF (Détail, Username, Email, etc.)
-        if (data.detail) {
+        // Gérer les erreurs de validation DRF
+        if (typeof data === 'string') {
+          setError(data);
+        } else if (data.detail) {
           setError(data.detail);
         } else if (typeof data === 'object') {
-          // Concaténer les erreurs de validation (ex: {"email": ["..."], "username": ["..."]})
-          const messages = Object.entries(data)
+          // Concaténer les erreurs de validation
+          const errorParts = Object.entries(data)
             .map(([key, value]) => {
               const fieldName = key === 'username' ? 'Utilisateur' : 
                                key === 'email' ? 'Email' : 
-                               key === 'password' ? 'Mot de passe' : key;
-              return `${fieldName}: ${Array.isArray(value) ? value[0] : value}`;
-            })
-            .join(' | ');
-          setError(messages || 'Erreur lors de l\'inscription');
+                               key === 'password' ? 'Mot de passe' : 
+                               key === 'password_confirm' ? 'Confirmation' : key;
+              const val = Array.isArray(value) ? value[0] : JSON.stringify(value);
+              return `${fieldName}: ${val}`;
+            });
+          
+          if (errorParts.length > 0) {
+            setError(errorParts.join(' | '));
+          } else {
+            setError('Données invalides : ' + JSON.stringify(data));
+          }
         } else {
-          setError('Erreur lors de l\'inscription');
+          setError('Erreur lors de l\'inscription : ' + JSON.stringify(data));
         }
       } else {
-        setError(err instanceof Error ? err.message : 'Erreur lors de l\'inscription');
+        setError(err instanceof Error ? err.message : 'Erreur réseau lors de l\'inscription');
       }
     } finally {
       setIsLoading(false);
