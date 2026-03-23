@@ -28,8 +28,24 @@ export default function Login() {
     try {
       await authService.login({ username: email, password });
       navigate('/analysis');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Identifiants incorrects');
+    } catch (err: any) {
+      console.error('Login error:', err);
+      
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (data.detail) {
+          setError(data.detail);
+        } else if (data.non_field_errors) {
+          setError(data.non_field_errors[0]);
+        } else if (typeof data === 'object') {
+          const messages = Object.values(data).flat().join(' | ');
+          setError(messages || 'Identifiants invalides');
+        } else {
+          setError('Erreur lors de la connexion');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'Identifiants invalides');
+      }
     } finally {
       setIsLoading(false);
     }

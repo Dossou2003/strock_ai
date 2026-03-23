@@ -53,8 +53,31 @@ export default function Register() {
         role: formData.role,
       });
       navigate('/login');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de l\'inscription');
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      
+      if (err.response?.data) {
+        const data = err.response.data;
+        // Gérer les erreurs de validation DRF (Détail, Username, Email, etc.)
+        if (data.detail) {
+          setError(data.detail);
+        } else if (typeof data === 'object') {
+          // Concaténer les erreurs de validation (ex: {"email": ["..."], "username": ["..."]})
+          const messages = Object.entries(data)
+            .map(([key, value]) => {
+              const fieldName = key === 'username' ? 'Utilisateur' : 
+                               key === 'email' ? 'Email' : 
+                               key === 'password' ? 'Mot de passe' : key;
+              return `${fieldName}: ${Array.isArray(value) ? value[0] : value}`;
+            })
+            .join(' | ');
+          setError(messages || 'Erreur lors de l\'inscription');
+        } else {
+          setError('Erreur lors de l\'inscription');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'Erreur lors de l\'inscription');
+      }
     } finally {
       setIsLoading(false);
     }
