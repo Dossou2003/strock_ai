@@ -133,17 +133,23 @@ class AnalysisViewSet(viewsets.ModelViewSet):
         """
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            # Créer l'analyse avec l'utilisateur connecté
-            analysis = serializer.save(user=request.user)
-            
-            # Lancer le traitement en arrière-plan (simplifié pour l'instant)
-            # TODO: Utiliser Celery pour traitement asynchrone
-            self._process_analysis(analysis)
-            
-            return Response(
-                AnalysisSerializer(analysis).data,
-                status=status.HTTP_201_CREATED
-            )
+            try:
+                # Créer l'analyse avec l'utilisateur connecté
+                analysis = serializer.save(user=request.user)
+                
+                # Lancer le traitement en arrière-plan (simplifié pour l'instant)
+                # TODO: Utiliser Celery pour traitement asynchrone
+                self._process_analysis(analysis)
+                
+                return Response(
+                    AnalysisSerializer(analysis).data,
+                    status=status.HTTP_201_CREATED
+                )
+            except Exception as e:
+                return Response(
+                    {'error': str(e)}, 
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
