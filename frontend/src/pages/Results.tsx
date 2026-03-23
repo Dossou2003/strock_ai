@@ -168,9 +168,34 @@ export default function Results() {
   const probability = Math.round(result.probability * 100);
 
   return (
-    <div className="min-h-screen bg-black text-white pt-28 pb-20">
+    <div className="min-h-screen bg-black text-white pt-28 pb-20 print:bg-white print:text-black print:pt-4 print:pb-4">
+      <style>{`
+        @media print {
+          @page { size: A4 landscape; margin: 10mm; }
+          body { background: white !important; color: black !important; }
+          * { color: black !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; text-shadow: none !important; }
+          
+          /* Force colors for light theme on print */
+          .bg-black { background-color: white !important; }
+          .text-white, .text-white\\/50, .text-white\\/60, .text-white\\/80 { color: #111827 !important; }
+          .border-white\\/10, .border-white\\/20 { border-color: #d1d5db !important; }
+          
+          /* Prevent cards and grids from breaking across pages */
+          .rounded-\\[2rem\\], .rounded-2xl, .rounded-xl {
+            border: 1px solid #d1d5db !important;
+            background: #f9fafb !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            box-shadow: none !important;
+          }
+          
+          /* Image container fixes */
+          img { break-inside: avoid !important; }
+        }
+      `}</style>
+
       {/* Background */}
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0 print:hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-violet-950/50 to-black" />
         <div 
           className="absolute w-[600px] h-[600px] rounded-full opacity-20"
@@ -218,7 +243,7 @@ export default function Results() {
               })}
             </p>
           </div>
-          <div className="flex gap-4 mt-4 md:mt-0">
+          <div className="flex gap-4 mt-4 md:mt-0 print:hidden">
             <Link
               to="/analysis"
               className="px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105"
@@ -560,9 +585,49 @@ export default function Results() {
           </div>
         </div>
 
+        {/* Recommandations Cliniques */}
+        <div 
+          className="rounded-[2rem] p-8 mb-8"
+          style={{
+            background: hasStroke 
+              ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.02) 100%)'
+              : 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.02) 100%)',
+            border: `1px solid ${hasStroke ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}`,
+            borderLeft: `6px solid ${hasStroke ? '#ef4444' : '#10b981'}`
+          }}
+        >
+          <div className="flex items-start gap-4">
+            <span className="text-3xl mt-1">{hasStroke ? '🚨' : '✅'}</span>
+            <div>
+              <h3 className="text-xl font-bold mb-3" style={{ color: hasStroke ? '#ef4444' : '#10b981' }}>
+                Recommandations Cliniques
+              </h3>
+              <p className="text-lg text-white/90 leading-relaxed font-medium">
+                {hasStroke ? (
+                  <>
+                    <strong className="text-white">Alerte : Asymétries territoriales importantes détectées, fortement évocatrices d'un Accident Vasculaire Cérébral (AVC).</strong>
+                    <br/><br/>
+                    • <strong>ACTION IMMÉDIATE :</strong> Déclenchez l'alerte AVC (Appelez le SAMU, 15, 112 ou 911).<br/>
+                    • Une prise en charge médicale spécialisée en unité neuro-vasculaire (UNV) est requise de **toute urgence**.<br/>
+                    • Ne donnez ni à boire ni à manger au patient et allongez-le avant l'arrivée des secours.
+                  </>
+                ) : (
+                  <>
+                    <strong className="text-white">Analyse normale : Aucune asymétrie significative évocatrice d'un AVC à un stade avancé n'a été détectée.</strong>
+                    <br/><br/>
+                    • L'algorithme n'identifie pas de dommages tissulaires ischémiques ou hémorragiques évidents (Probabilité faible : {probability}%).<br/>
+                    • <strong>IMPORTANT :</strong> Un scanner d'aspect normal dans les toutes premières heures ne permet pas d'exclure formellement un AVC ischémique à la phase hyper-aiguë.<br/>
+                    • Si des symptômes cliniques neurologiques (visage paralysé, bras inerte, troubles de la parole) sont présents, une prise en charge urgente reste nécessaire.
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Actions */}
         <div 
-          className={`rounded-[2rem] p-6 mb-8 transition-all duration-1000 delay-500 ${
+          className={`rounded-[2rem] p-6 mb-8 transition-all duration-1000 delay-500 print:hidden ${
             mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
           style={{
@@ -589,7 +654,8 @@ export default function Results() {
               💬 Discuter avec l'assistant
             </button>
             <button 
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium border border-white/20 hover:bg-white/10 transition-all duration-300"
+              onClick={() => window.print()}
+              className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium border border-white/20 hover:bg-white/10 transition-all duration-300 print:hidden"
             >
               🖨️ Imprimer
             </button>
